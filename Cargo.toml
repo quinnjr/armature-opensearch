@@ -43,6 +43,7 @@ aws-credential-types = { version = "1", optional = true }
 aws-types = { version = "1", optional = true }
 
 [dev-dependencies]
+cargo-husky = { version = "1.5", default-features = false, features = ["user-hooks"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 armature-testkit = { path = "../armature-testkit" }
 aws-credential-types = { version = "1", features = ["test-util"] }
