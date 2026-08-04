@@ -1,12 +1,12 @@
 [package]
 name = "armature-opensearch"
 version = "0.3.0"
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
+edition = "2024"
+rust-version = "1.94.1"
+authors = ["Joseph Quinn <quinn.josephr@proton.me>"]
+license = "Apache-2.0"
 repository = "https://github.com/quinnjr/armature-opensearch"
-homepage.workspace = true
+homepage = "https://quinnjr.github.io/armature"
 description = "OpenSearch integration for the Armature framework"
 keywords = ["opensearch", "elasticsearch", "search", "armature", "full-text"]
 categories = ["database", "web-programming"]
@@ -20,8 +20,8 @@ native-tls = ["opensearch/native-tls"]
 aws-auth = ["dep:aws-config", "dep:aws-credential-types", "dep:aws-types", "opensearch/aws-auth"]
 
 [dependencies]
-armature-core = { path = "../armature-core", version = "0" }
-armature-log = { path = "../armature-log", version = "0" }
+armature-core = { version = "0" }
+armature-log = { version = "0" }
 
 # OpenSearch client
 opensearch = { version = "2", default-features = false }
