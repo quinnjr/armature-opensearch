@@ -1,6 +1,6 @@
 [package]
 name = "armature-opensearch"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.94.1"
 authors = ["Joseph Quinn <quinn.josephr@proton.me>"]
@@ -20,7 +20,7 @@ native-tls = ["opensearch/native-tls"]
 aws-auth = ["dep:aws-config", "dep:aws-credential-types", "dep:aws-types", "opensearch/aws-auth"]
 
 [dependencies]
-armature-core = { version = "0.8" }
+armature-core = { version = "0.9" }
 armature-log = { version = "0.2" }
 
 # OpenSearch client
