@@ -9,7 +9,39 @@ Earlier changes are recorded in the workspace [`CHANGELOG.md`](../CHANGELOG.md).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-15
+
+### Changed
+
+- **Breaking:** requires `armature-core` 0.10 (was `0.9`); its types appear in this crate's API, so the requirement change is breaking here and the minor moves. Part of the `armature-core` 0.10 release train.
+- The `aws-auth` feature's AWS SDK dependencies updated to their newest releases (`aws-config 1.12`, `aws-types 1.6`, `aws-credential-types 1.3`).
+- A direct `aws-smithy-types >=1.6.3, <1.7` requirement keeps a fresh resolve on the `aws-smithy-types` 1.6 line; without it the resolver picks `aws-sdk-*`/`aws-runtime` releases that need `aws-smithy-types` 1.7 and fail to build against `aws-config` 1.12.
+- The MSRV CI job also checks `--all-features`, so the optional AWS SDK dependencies are built on the MSRV toolchain.
+- AWS SDK dependencies no longer enable their default features, dropping the SDK's legacy hyper-0.14 client and its `h2 0.3` (RUSTSEC-2026-0258); the hyper-1 `default-https-client` and `rt-tokio` (plus `sigv4a`/`http-1x` where the SDK enabled them by default) are kept.
+
+## [0.4.0] - 2026-08-05
+
+### Changed
+
+- **Requires `armature-core` 0.9 (breaking).** The requirement moved `0.8` →
+  `0.9`. `armature-core 0.9.0` itself moves `armature-h1` across a breaking
+  0.x boundary; because `armature-core` types appear in this crate's own
+  public API, the requirement change is breaking here too and the minor moves
+  with it. Under Cargo's 0.x caret rules the 0.8 and 0.9 types are distinct
+  and do not unify, so a consumer holding an `armature-core 0.8` type cannot
+  pass it to this crate. Part of the `armature-core 0.9.0` release train; see
+  `armature-core`'s CHANGELOG for the publish order.
+
+## [0.3.1] - 2026-08-04
+
 ### Fixed
 
-- **Breaking:** `bulk_index`/`bulk_delete` chunk their requests, so they are no longer atomic — a large call previously exceeded `http.max_content_length` and was rejected wholesale.
-- Bulk error counting no longer looks only under the `index` action key, so failures under another action are not reported as successes.
+- Requirements on sibling armature crates name a minor instead of `0`. Under
+  Cargo's 0.x rules `version = "0"` matches any release ever made, and edition
+  2024 selects the MSRV-aware resolver, so a consumer declaring an older
+  `rust-version` was handed the oldest version satisfying it — resolving
+  `armature-core = "0"` on Rust 1.89 produced `armature-core 0.2.3` while an
+  explicit `armature-core = "0.8"` elsewhere in the same graph pulled 0.8.2.
+  Two copies of core, and a build failing on symbols the older one lacks. Each
+  0.x minor in this family is a breaking change, so the requirement now names
+  one. No API change.
