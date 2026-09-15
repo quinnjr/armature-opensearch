@@ -62,3 +62,6 @@ jobs:
       # `--all-targets` without `--all-features`: the MSRV claim is about the
       # crate as published with its defaults, not about every optional feature.
       - run: cargo check --all-targets
+      # The AWS SDK dependencies are optional, so defaults alone never build them;
+      # check them on the MSRV toolchain too.
+      - run: cargo check --all-targets --all-features
