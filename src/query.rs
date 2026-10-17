@@ -391,7 +391,13 @@ impl BoolQueryBuilder {
     }
 }
 
-/// Query string query.
+/// Query string query (full Lucene syntax).
+///
+/// # Security
+///
+/// Do not build this from untrusted user input: Lucene syntax allows
+/// targeting any field, regex/wildcard/range queries, and fails on malformed
+/// input. Use `SearchBuilder::simple_query_string` for end-user search.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueryStringQuery {
     /// Query string.
