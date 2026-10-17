@@ -32,7 +32,10 @@ pub struct OpenSearchClient {
 impl OpenSearchClient {
     /// Create a new OpenSearch client.
     pub fn new(config: OpenSearchConfig) -> Result<Self> {
-        info!("Initializing OpenSearch client for: {:?}", config.urls);
+        info!(
+            "Initializing OpenSearch client for: {:?}",
+            crate::config::redact_urls_for_logging(&config.urls)
+        );
 
         let url = config
             .urls
