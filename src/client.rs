@@ -140,7 +140,7 @@ impl OpenSearchClient {
         }
 
         // Configure TLS: CA trust and mutual-TLS client certificates.
-        #[cfg(any(feature = "rustls", feature = "native-tls"))]
+        #[cfg(feature = "rustls")]
         if let Some(tls) = &config.tls {
             use opensearch::{
                 auth::{ClientCertificate, Credentials as OsCredentials},
@@ -210,10 +210,10 @@ impl OpenSearchClient {
             }
         }
 
-        #[cfg(not(any(feature = "rustls", feature = "native-tls")))]
+        #[cfg(not(feature = "rustls"))]
         if config.tls.is_some() {
             warn!(
-                "OpenSearchConfig::tls is set but neither the `rustls` nor `native-tls` feature \
+                "OpenSearchConfig::tls is set but the `rustls` feature \
                  is enabled on armature-opensearch; TLS options are not applied"
             );
         }
@@ -672,7 +672,7 @@ mod tests {
     use super::*;
     use crate::config::TlsConfig;
 
-    #[cfg(any(feature = "rustls", feature = "native-tls"))]
+    #[cfg(feature = "rustls")]
     #[test]
     fn mtls_conflicts_with_basic_auth() {
         let config = OpenSearchConfig::new("https://localhost:9200")
@@ -688,7 +688,7 @@ mod tests {
         );
     }
 
-    #[cfg(all(feature = "aws-auth", any(feature = "rustls", feature = "native-tls")))]
+    #[cfg(all(feature = "aws-auth", feature = "rustls"))]
     #[test]
     fn mtls_conflicts_with_sigv4_auth() {
         let provider = aws_credential_types::provider::SharedCredentialsProvider::new(
@@ -706,7 +706,7 @@ mod tests {
         assert!(msg.contains("SigV4"), "unexpected error: {msg}");
     }
 
-    #[cfg(any(feature = "rustls", feature = "native-tls"))]
+    #[cfg(feature = "rustls")]
     #[test]
     fn ca_cert_missing_file_produces_read_error() {
         let config = OpenSearchConfig::new("https://localhost:9200")
@@ -721,7 +721,7 @@ mod tests {
         );
     }
 
-    #[cfg(any(feature = "rustls", feature = "native-tls"))]
+    #[cfg(feature = "rustls")]
     #[test]
     fn tls_over_non_loopback_http_requires_https() {
         let config = OpenSearchConfig::new("http://example.com:9200")

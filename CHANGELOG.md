@@ -9,6 +9,10 @@ Earlier changes are recorded in the workspace [`CHANGELOG.md`](../CHANGELOG.md).
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking:** The `native-tls` feature is removed (it pulled in OpenSSL; Armature is rustls-only). Use the default `rustls` feature.
+
 ### Added
 
 - `SearchBuilder::simple_query_string` / `simple_query_string_fields`: the `simple_query_string` query, safe for end-user search input (limited operators, no field targeting/regex/ranges, never errors on malformed input).
