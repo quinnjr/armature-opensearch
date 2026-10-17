@@ -78,7 +78,49 @@ impl SearchBuilder {
         self
     }
 
-    /// Simple query string search.
+    /// Search with OpenSearch's `simple_query_string` query.
+    ///
+    /// This is the query to use for **end-user search input**. Its syntax is
+    /// limited to `+ | - " * ( ) ~` operators, it cannot target arbitrary
+    /// fields, run regexes or ranges, and it never fails on malformed input,
+    /// so a user cannot use it to probe fields they should not see or to
+    /// trigger expensive/erroring queries.
+    ///
+    /// ```
+    /// # use armature_opensearch::SearchBuilder;
+    /// # fn demo(search: SearchBuilder) -> SearchBuilder {
+    /// search.simple_query_string("rust +web -java")
+    /// # }
+    /// ```
+    pub fn simple_query_string(self, query: impl Into<String>) -> Self {
+        self.query_json(json!({
+            "simple_query_string": {
+                "query": query.into()
+            }
+        }))
+    }
+
+    /// [`simple_query_string`](Self::simple_query_string) restricted to the
+    /// given fields (the caller, not the user, chooses which fields are
+    /// searchable).
+    pub fn simple_query_string_fields(self, query: impl Into<String>, fields: Vec<String>) -> Self {
+        self.query_json(json!({
+            "simple_query_string": {
+                "query": query.into(),
+                "fields": fields
+            }
+        }))
+    }
+
+    /// Search with OpenSearch's full Lucene `query_string` query.
+    ///
+    /// # Security
+    ///
+    /// **Do not pass untrusted user input here.** The full Lucene syntax lets
+    /// the caller target any field (`password_hash:*`, `_id:...`), run regex
+    /// (`/.*/`), wildcard and range queries that can be very expensive, and
+    /// malformed input makes the request fail. For search boxes use
+    /// [`simple_query_string`](Self::simple_query_string) instead.
     pub fn query_string(self, query: impl Into<String>) -> Self {
         self.query_json(json!({
             "query_string": {
@@ -612,6 +654,26 @@ mod tests {
 
     fn builder() -> SearchBuilder {
         SearchBuilder::new(Arc::new(OpenSearch::default()))
+    }
+
+    #[test]
+    fn simple_query_string_emits_simple_query_not_lucene_query_string() {
+        let body = builder()
+            .simple_query_string("password_hash:* /.*/")
+            .build_body();
+        assert_eq!(
+            body["query"],
+            json!({ "simple_query_string": { "query": "password_hash:* /.*/" } })
+        );
+        assert!(body["query"].get("query_string").is_none());
+
+        let body = builder()
+            .simple_query_string_fields("rust", vec!["title".into()])
+            .build_body();
+        assert_eq!(
+            body["query"]["simple_query_string"]["fields"],
+            json!(["title"])
+        );
     }
 
     #[test]

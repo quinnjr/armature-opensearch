@@ -9,6 +9,19 @@ Earlier changes are recorded in the workspace [`CHANGELOG.md`](../CHANGELOG.md).
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking:** The `native-tls` feature is removed (it pulled in OpenSSL; Armature is rustls-only). Use the default `rustls` feature.
+
+### Added
+
+- `SearchBuilder::simple_query_string` / `simple_query_string_fields`: the `simple_query_string` query, safe for end-user search input (limited operators, no field targeting/regex/ranges, never errors on malformed input).
+
+### Security
+
+- `OpenSearchConfig`'s `Debug` output and the client's "Initializing" log line no longer print credentials: `password` (and the AWS credentials provider) print as `<redacted>` and `user:pass@` userinfo in `urls` is masked as `***@`.
+- Documented that `SearchBuilder::query_string` / `QueryStringQuery` (full Lucene syntax) must not receive untrusted input; the crate example now uses `simple_query_string`.
+
 ## [0.5.0] - 2026-09-15
 
 ### Changed
