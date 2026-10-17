@@ -3,7 +3,11 @@
 use std::time::Duration;
 
 /// OpenSearch client configuration.
-#[derive(Debug, Clone)]
+///
+/// The `Debug` impl redacts `password` and any `user:pass@` userinfo
+/// embedded in `urls`, so the config can be logged without leaking
+/// credentials.
+#[derive(Clone)]
 #[non_exhaustive]
 pub struct OpenSearchConfig {
     /// OpenSearch URL(s).
@@ -29,6 +33,48 @@ pub struct OpenSearchConfig {
     pub aws_credentials_provider: Option<aws_credential_types::provider::SharedCredentialsProvider>,
     /// Enable request compression.
     pub compression: bool,
+}
+
+impl std::fmt::Debug for OpenSearchConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut d = f.debug_struct("OpenSearchConfig");
+        d.field("urls", &redact_urls_for_logging(&self.urls))
+            .field("username", &self.username)
+            .field("password", &self.password.as_ref().map(|_| "<redacted>"))
+            .field("connect_timeout", &self.connect_timeout)
+            .field("request_timeout", &self.request_timeout)
+            .field("tls", &self.tls);
+        #[cfg(feature = "aws-auth")]
+        d.field("aws_region", &self.aws_region).field(
+            "aws_credentials_provider",
+            &self.aws_credentials_provider.as_ref().map(|_| "<redacted>"),
+        );
+        d.field("compression", &self.compression).finish()
+    }
+}
+
+/// Strip userinfo (`user:pass@`) from a node URL so it can be logged
+/// safely. The *last* `@` inside the authority is used, so an unencoded `@`
+/// in the password does not leave part of the credentials behind.
+pub(crate) fn redact_url_for_logging(url: &str) -> String {
+    let after_scheme = url.find("://").map(|i| i + 3).unwrap_or(0);
+    let authority_end = url[after_scheme..]
+        .find(['/', '?', '#'])
+        .map(|i| after_scheme + i)
+        .unwrap_or(url.len());
+    match url[after_scheme..authority_end].rfind('@') {
+        Some(at) => format!(
+            "{}***@{}",
+            &url[..after_scheme],
+            &url[after_scheme + at + 1..]
+        ),
+        None => url.to_string(),
+    }
+}
+
+/// [`redact_url_for_logging`] applied to every URL in a list.
+pub(crate) fn redact_urls_for_logging(urls: &[String]) -> Vec<String> {
+    urls.iter().map(|u| redact_url_for_logging(u)).collect()
 }
 
 impl OpenSearchConfig {
@@ -160,5 +206,36 @@ impl TlsConfig {
     pub fn danger_accept_invalid_certs(mut self) -> Self {
         self.danger_accept_invalid_certs = true;
         self
+    }
+}
+
+#[cfg(test)]
+mod redaction_tests {
+    use super::*;
+
+    #[test]
+    fn debug_redacts_password_and_url_userinfo() {
+        let config = OpenSearchConfig::cluster(vec![
+            "https://admin:url-secret@node1:9200".to_string(),
+            "https://node2:9200".to_string(),
+        ])
+        .with_basic_auth("admin", "field-secret");
+        let debug = format!("{config:?}");
+        assert!(
+            !debug.contains("url-secret"),
+            "URL password leaked: {debug}"
+        );
+        assert!(!debug.contains("field-secret"), "password leaked: {debug}");
+        assert!(debug.contains("https://***@node1:9200"));
+        assert!(debug.contains("https://node2:9200"));
+    }
+
+    #[test]
+    fn redact_url_ignores_at_outside_authority() {
+        assert_eq!(
+            redact_url_for_logging("https://h:9200/p?x=a@b"),
+            "https://h:9200/p?x=a@b"
+        );
+        assert_eq!(redact_url_for_logging("https://u:p@w@h"), "https://***@h");
     }
 }

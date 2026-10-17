@@ -45,7 +45,7 @@
 //!     let results: Vec<Article> = client
 //!         .search()
 //!         .index("articles")
-//!         .query_string("hello")
+//!         .simple_query_string("hello")
 //!         .execute()
 //!         .await?;
 //!
