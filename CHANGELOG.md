@@ -9,6 +9,8 @@ Earlier changes are recorded in the workspace [`CHANGELOG.md`](../CHANGELOG.md).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-17
+
 ### Removed
 
 - **Breaking:** The `native-tls` feature is removed (it pulled in OpenSSL; Armature is rustls-only). Use the default `rustls` feature.
